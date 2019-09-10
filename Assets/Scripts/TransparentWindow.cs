@@ -39,6 +39,7 @@ public class TransparentWindow : MonoBehaviour
 	[DllImport("user32.dll")]
 	static extern IntPtr GetActiveWindow();
 	
+	///<a href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlonga"> SetWIndowLongA Documentation </a>
 	[DllImport("user32.dll")]
 	static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
 
@@ -54,6 +55,7 @@ public class TransparentWindow : MonoBehaviour
 	[DllImportAttribute("user32.dll")]
 	static extern bool ReleaseCapture();
 
+	///<a href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos"> SetWindowPos Documentation</a> 
 	[DllImport("user32.dll", EntryPoint = "SetWindowPos")]
 	static extern int SetWindowPos(IntPtr hwnd, int hwndInsertAfter, int x, int y, int cx, int cy, int uFlags);
 
@@ -61,12 +63,19 @@ public class TransparentWindow : MonoBehaviour
 	static extern uint DwmExtendFrameIntoClientArea(IntPtr hWnd, ref Rectangle margins);
 
 	const int GWL_STYLE = -16;
+	const int GWL_EXSTYLE=-20;
 	const uint WS_POPUP = 0x80000000;
 	const uint WS_VISIBLE = 0x10000000;
+	const uint WS_EX_TRANSPARENT = 0x00000020;
+	const uint WS_EX_LAYERED=0x00080000;
 	const int HWND_TOPMOST = -1;
 
 	const int WM_SYSCOMMAND = 0x112;
 	const int WM_MOUSE_MOVE = 0xF012;
+
+	const uint SWP_DRAWFRAME=0x0020;
+	const uint SWP_SHOWWINDOW=0x0040;
+	
 
 	int fWidth;
 	int fHeight;
@@ -99,13 +108,13 @@ public class TransparentWindow : MonoBehaviour
 		margins = new Rectangle() {Left = -1};
 		hwnd = GetActiveWindow();
 
-		if (GetWindowRect(hwnd, out windowRect))
+		if (!GetWindowRect(hwnd, out windowRect))
 		{
 			Debug.LogError("Couldn't get Window Rect");
 		}
 
 		SetWindowLong(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-		SetWindowPos(hwnd, HWND_TOPMOST, windowRect.Left, windowRect.Top, fWidth, fHeight, 32 | 64);
+		SetWindowPos(hwnd, HWND_TOPMOST, windowRect.Left, windowRect.Top, fWidth, fHeight, SWP_DRAWFRAME | SWP_SHOWWINDOW);
 		DwmExtendFrameIntoClientArea(hwnd, ref margins);
 #endif
 	}
@@ -143,15 +152,15 @@ public class TransparentWindow : MonoBehaviour
 #if !UNITY_EDITOR
 		if (focusWindow)
 		{
-			SetWindowLong (hwnd, -20, ~(((uint)524288) | ((uint)32)));
-			SetWindowPos(hwnd, HWND_TOPMOST, windowRect.Left, windowRect.Top, fWidth, fHeight, 32 | 64);
+			SetWindowLong (hwnd, GWL_EXSTYLE, ~(WS_EX_LAYERED | WS_EX_TRANSPARENT));
+			SetWindowPos(hwnd, HWND_TOPMOST, windowRect.Left, windowRect.Top, fWidth, fHeight, SWP_DRAWFRAME | SWP_SHOWWINDOW);
 		}
 		else
 		{
 			SetWindowLong(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-			SetWindowLong (hwnd, -20, (uint)524288 | (uint)32);
+			SetWindowLong (hwnd, GWL_EXSTYLE, WS_EX_LAYERED | WS_EX_TRANSPARENT);
 			SetLayeredWindowAttributes (hwnd, 0, 255, 2);
-			SetWindowPos(hwnd, HWND_TOPMOST, windowRect.Left, windowRect.Top, fWidth, fHeight, 32 | 64);
+			SetWindowPos(hwnd, HWND_TOPMOST, windowRect.Left, windowRect.Top, fWidth, fHeight, SWP_DRAWFRAME | SWP_SHOWWINDOW);
 		}
 #endif
 	}
