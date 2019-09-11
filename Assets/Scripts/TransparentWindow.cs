@@ -73,8 +73,8 @@ public class TransparentWindow : MonoBehaviour
 	const int WM_SYSCOMMAND = 0x112;
 	const int WM_MOUSE_MOVE = 0xF012;
 
-	const uint SWP_DRAWFRAME=0x0020;
-	const uint SWP_SHOWWINDOW=0x0040;
+	const int SWP_DRAWFRAME=0x0020;
+	const int SWP_SHOWWINDOW=0x0040;
 	
 
 	int fWidth;
